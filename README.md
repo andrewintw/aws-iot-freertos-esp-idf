@@ -39,12 +39,14 @@ ssh 127.0.0.1:2201 use the key: `.vagrant/machines/default/virtualbox/private_ke
 
 for Amazon FreeRTOS and ESP-WROVER-KIT board, run the following command:
 
+according to your user credentials info, change variables in afr_dev_env_setup.sh
+
 	vagrant@vbox-afr:~$ /vagrant/afr_dev_env_setup.sh 
 
 ## 4. Build, Run and Test
 
 1. connect your board to Linux and made sure you got /dev/ttyUSB* node
-2. according to your user credentials, wifi connection info, change variables in afr_iot_bringup.sh
+2. according to your wifi connection info, change variables in afr_iot_bringup.sh
 3. run afr_iot_bringup.sh <afr_source_zip> <your_thing_name>
 4. Subscribe topic: `iotdemo/#` on [AWS IoT console](https://console.aws.amazon.com/iot/home/#/test)
 2. UART monitor: `$afr_source_dir/vendors/espressif/esp-idf/tools/idf.py monitor -p /dev/ttyUSB1 -B $afr_build_dir`

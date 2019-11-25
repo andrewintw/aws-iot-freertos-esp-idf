@@ -3,16 +3,11 @@
 afr_source_zip="$1"
 thing_name="$2"
 
-aws_cfg_access_key_id='BKIARR2NK7URSO63RWOW'
-aws_cfg_secret_access_key='+Z0j3aRtO3A3c3DviM/pFPN5zbqNyzZg51pi5fJ0'
-aws_cfg_default_region='ap-northeast-1'
-aws_cfg_default_output='json'
+afr_source_dir=''
+afr_build_dir='build'
 
-afr_source_dir=$HOME/AmazonFreeRTOS
-afr_build_dir=$afr_source_dir/build
-
-wifi_ssid="WIFI_2.4G_SSID"
-wifi_password="WIFI_password"
+wifi_ssid="WIFI_SSID"
+wifi_password="wifi-password"
 wifi_security="eWiFiSecurityWPA2"
 
 set_path_file=$HOME/set_PATH_ESP-IDF.sh
@@ -43,27 +38,14 @@ do_init () {
 		echo "no such file: $set_path_file"
 		exit 1
 	fi
-
-	if [ `ls /dev/ttyUSB* 2>/dev/null | wc -l` -eq 0 ]; then
-		echo "There is no /dev/ttyUSB*"
-		exit 1
-	fi
 }
 
 untar_afr_tarball() {
-	cd $HOME
 	unzip $afr_source_zip
+	afr_source_dir=$PWD/AmazonFreeRTOS
+	afr_build_dir=$afr_source_dir/build
+
 	chmod a+x $afr_source_dir/vendors/espressif/esp-idf/tools/idf.py
-}
-
-aws_configure_env () {
-	aws configure set aws_access_key_id     $aws_cfg_access_key_id
-	aws configure set aws_secret_access_key $aws_cfg_secret_access_key
-	aws configure set default.region        $aws_cfg_default_region
-	aws configure set default.output        $aws_cfg_default_output
-
-	cat ~/.aws/config
-	cat ~/.aws/credentials
 }
 
 aws_config_quick_start () {
@@ -85,7 +67,7 @@ build_afr_source () {
 }
 
 idf_flash () {
-	$afr_source_dir/vendors/espressif/esp-idf/tools/idf.py erase_flash flash -p /dev/ttyUSB1 -B $afr_build_dir
+	$afr_source_dir/vendors/espressif/esp-idf/tools/idf.py erase_flash flash -B $afr_build_dir
 }
 
 idf_monitor () {
@@ -99,19 +81,27 @@ do_done () {
 1. Subscribe topic: iotdemo/# on
    https://console.aws.amazon.com/iot/home/#/test
 
-2. UART monitor:
+2. Erase & Flash
+   cd $afr_source_dir
+   $afr_source_dir/vendors/espressif/esp-idf/tools/idf.py erase_flash flash -B $afr_build_dir
+
+3. UART monitor:
+   cd $afr_source_dir
    $afr_source_dir/vendors/espressif/esp-idf/tools/idf.py monitor -p /dev/ttyUSB1 -B $afr_build_dir
 
 EOF
+	if [ `ls /dev/ttyUSB* 2>/dev/null | wc -l` -eq 0 ]; then
+		echo "Warning: There is no /dev/ttyUSB*"
+		#exit 1
+	fi
 }
 
 do_main () {
 	do_init
-	aws_configure_env
 	untar_afr_tarball
 	aws_config_quick_start
 	build_afr_source
-	idf_flash
+	#idf_flash
 	do_done
 	#idf_monitor
 }

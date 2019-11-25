@@ -13,8 +13,23 @@ PIP_REQ_FILE_URL="https://raw.githubusercontent.com/aws/amazon-freertos/master/v
 SET_SKEL_SH="install_skel-home.sh"
 SET_SKEL_SH_URL="https://raw.githubusercontent.com/andrewintw/skel-home/master/$SET_SKEL_SH"
 
-GIT_YOUR_NAME='andrew.lin'
-GIT_YOUR_EMAIL="$GIT_YOUR_NAME@browan.com"
+git_your_name='your.name'
+git_your_email="$git_your_name@hostname.com"
+
+aws_cfg_access_key_id='BKIARR2NK7URSO63RWOX'
+aws_cfg_secret_access_key='+Z0j3aRtO3A3c3DviM/pFPN5zbqNyzZg51pi5fJ1'
+aws_cfg_default_region='ap-northeast-1'
+aws_cfg_default_output='json'
+
+do_init () {
+	cat << EOF
+
+1. create AWS IAM user and get credentials info
+2. according to your info, change aws_cfg_xxx variables in this script
+
+EOF
+	sleep 5
+}
 
 config_def_shell () {
 	echo "dash dash/sh boolean false" | sudo debconf-set-selections
@@ -82,14 +97,24 @@ install_pypkgs () {
 	pip install --user boto3
 }
 
+aws_configure_env () {
+	aws configure set aws_access_key_id     $aws_cfg_access_key_id
+	aws configure set aws_secret_access_key $aws_cfg_secret_access_key
+	aws configure set default.region        $aws_cfg_default_region
+	aws configure set default.output        $aws_cfg_default_output
+
+	cat ~/.aws/config
+	cat ~/.aws/credentials
+}
+
 config_skel_home () {
 	cd $HOME
 	rm -rf $SET_SKEL_SH
 	wget $SET_SKEL_SH_URL
 	chmod a+x $SET_SKEL_SH
 	$HOME/$SET_SKEL_SH
-	sed -i "s/YOUR_EMAIL/$GIT_YOUR_EMAIL/g" ~/.${USER}/config/gitconfig
-	sed -i "s/YOUR_NAME/$GIT_YOUR_NAME/g"   ~/.${USER}/config/gitconfig
+	sed -i "s/YOUR_EMAIL/$git_your_email/g" ~/.${USER}/config/gitconfig
+	sed -i "s/YOUR_NAME/$git_your_name/g"   ~/.${USER}/config/gitconfig
 }
 
 config_UART_perm () {
@@ -138,11 +163,10 @@ EOF'
 do_done () {
 	cat <<EOF
 
-1. create AWS IAM user and get credentials info
-2. download a:FreeRTOS source zip file from https://console.aws.amazon.com/freertos
-3. prepare your wifi connection info
-4. according to your info, change variables in afr_iot_bringup.sh
-5. run afr_iot_bringup.sh <afr_source_zip> <your_thing_name>
+1. download a:FreeRTOS source zip file from https://console.aws.amazon.com/freertos
+2. prepare your wifi connection info
+3. according to your info, change variables in afr_iot_bringup.sh
+4. run afr_iot_bringup.sh <afr_source_zip> <your_thing_name>
 
 *** please re-login  ***
 
@@ -150,6 +174,7 @@ EOF
 }
 
 do_main () {
+	do_init
 	#config_def_shell	# move to Vagrantfile
 	#config_locale		# move to Vagrantfile
 	#config_timezone	# move to Vagrantfile
@@ -157,6 +182,7 @@ do_main () {
 	config_def_editor
 	install_toolchain
 	install_pypkgs
+	aws_configure_env
 	config_skel_home
 	config_UART_perm
 	config_samba
